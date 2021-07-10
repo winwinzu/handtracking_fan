@@ -52,6 +52,7 @@ class Detector:
     def detected(self):
         return self.__detected
 
+
     @property
     def frame(self):
         return self.__frame
