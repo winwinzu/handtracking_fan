@@ -1,5 +1,6 @@
 import mediapipe as mp
 import cv2
+import numpy as np
 
 
 class Detector:
@@ -16,6 +17,8 @@ class Detector:
         self.__detected = False
         self.__hand_result = []
         self.__face_result = None
+        self.__finger_result = {}
+        self.__finger_names = ['THUMB', 'INDEX', 'MIDDLE', 'RING', 'PINKY']
 
     def __calc_hand_status(self):
         # draw hand landmarks, and get coordinates of landmarks
@@ -41,17 +44,35 @@ class Detector:
         pass
 
     def __calc_finger_status(self):
-        pass
+        for hand in self.__hand_result:
+            # loop in each hand
+            # for counter in range(len(self.__finger_names)):
+            for counter, name in enumerate(self.__finger_names):
+                lower = hand[4 * counter + 1]
+                upper = hand[4 * counter + 4]
+                origin = hand[0]
+
+                lower_vec = np.array([lower.x, lower.y, lower.z]) - np.array([origin.x, origin.y, origin.z])
+                # upper_vec = np.array([lower.x, lower.y, lower.z]) - np.array([upper.x, upper.y, upper.z])
+                upper_vec = np.array([upper.x, upper.y, upper.z]) - np.array([lower.x, lower.y, lower.z])
+
+                lower_abs = np.linalg.norm(lower_vec)
+                upper_abs = np.linalg.norm(upper_vec)
+
+                dot = np.inner(lower_vec, upper_vec)
+                rad = np.arccos(dot / (lower_abs * upper_abs))
+                theta = np.rad2deg(rad)
+                self.__finger_result[name] = theta
 
     def DetectProcess(self):
         _, self.__frame = self.__cap.read()
         self.__calc_hand_status()
+        self.__calc_finger_status()
     # public method
 
     @property
     def detected(self):
         return self.__detected
-
 
     @property
     def frame(self):
@@ -79,7 +100,4 @@ if __name__ == '__main__':
         key = cv2.waitKey(1)
         if key == 27:
             exit()
-        if det.detected:
-            for i in det.hand_status:
-                for j in i:
-                    print(j)
+
