@@ -14,14 +14,18 @@ class Detector:
         self.__hands = self.__mp_hands.Hands(max_num_hands=1,
                                              min_detection_confidence=0.5,
                                              min_tracking_confidence=0.5)
+        
         self.__detected = False
         self.__hand_result = []
         self.__face_result = None
         self.__finger_result = {}
         self.__finger_names = ['THUMB', 'INDEX', 'MIDDLE', 'RING', 'PINKY']
-        self.__send_finger = ''
-        self.__send_face = ''
+        self.__send_finger = None
+        self.__send_face = None
         self.__threshold = 50
+        self.__resized_x = 640
+        self.__resized_y = 640
+        self.__cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 
     def __calc_hand_status(self):
         # draw hand landmarks, and get coordinates of landmarks
@@ -44,7 +48,14 @@ class Detector:
             self.__detected = False
 
     def __calc_face_status(self):
-        pass
+        grayed_frame = cv2.cvtColor(self.__frame, cv2.COLOR_BGR2GRAY)
+        face_rect = self.__cascade.detectMultiScale(grayed_frame)
+        for x, y, w, h in face_rect:
+            cv2.rectangle(self.__frame, (x, y), (x + w, y + h), (255, 255, 255), 2)
+            center_x = x + (w / 2)
+            center_y = y + (h / 2)
+            print(center_x / self.__resized_x, center_y / self.__resized_y)
+            self.__send_face = [center_x, center_y]
 
     def __calc_finger_status(self):
         for hand in self.__hand_result:
@@ -79,12 +90,16 @@ class Detector:
                     self.__send_finger += str(number)
             print(self.__send_finger)
 
+    def __resize_window(self):
+        self.__frame = cv2.resize(self.__frame, (self.__resized_x, self.__resized_y))
 
     def DetectProcess(self):
         _, self.__frame = self.__cap.read()
         self.__calc_hand_status()
         self.__calc_finger_status()
+        self.__calc_face_status()
         self.__convert_finger_status()
+        self.__resize_window()
     # public method
 
     @property
@@ -125,4 +140,3 @@ if __name__ == '__main__':
         key = cv2.waitKey(1)
         if key == 27:
             exit()
-

@@ -2,8 +2,8 @@ import serial
 
 
 class Server:
-    def __init__(self):
-        self.__ser = serial.Serial('COM3', 9600)
+    def __init__(self, port_name='COM3'):
+        self.__ser = serial.Serial(port_name, 9600)
 
     def send_data(self, data):
         send_data = data.encode('utf-8')
