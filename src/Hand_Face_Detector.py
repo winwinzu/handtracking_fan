@@ -19,6 +19,9 @@ class Detector:
         self.__face_result = None
         self.__finger_result = {}
         self.__finger_names = ['THUMB', 'INDEX', 'MIDDLE', 'RING', 'PINKY']
+        self.__send_finger = ''
+        self.__send_face = ''
+        self.__threshold = 50
 
     def __calc_hand_status(self):
         # draw hand landmarks, and get coordinates of landmarks
@@ -63,11 +66,25 @@ class Detector:
                 rad = np.arccos(dot / (lower_abs * upper_abs))
                 theta = np.rad2deg(rad)
                 self.__finger_result[name] = theta
+                # add deg to dict obj key is each finger's name
+
+    def __convert_finger_status(self):
+        if self.detected:
+            self.__send_finger = ''
+            # initialize send string
+            for number, finger_name in enumerate(self.__finger_names):
+                if self.__finger_result[finger_name] < self.__threshold:
+                    # if finger turned add string the number
+                    # eg. 01234 means all fingers are turned
+                    self.__send_finger += str(number)
+            print(self.__send_finger)
+
 
     def DetectProcess(self):
         _, self.__frame = self.__cap.read()
         self.__calc_hand_status()
         self.__calc_finger_status()
+        self.__convert_finger_status()
     # public method
 
     @property
@@ -89,6 +106,14 @@ class Detector:
     @property
     def face_status(self):
         return self.__face_result
+
+    @property
+    def send_finger(self):
+        return self.__send_finger
+
+    @property
+    def send_face(self):
+        return self.__send_face
 
 
 if __name__ == '__main__':
