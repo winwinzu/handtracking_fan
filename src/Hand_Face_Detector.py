@@ -12,7 +12,7 @@ class Detector:
         self.__mp_drawing = mp.solutions.drawing_utils
         self.__mp_hands = mp.solutions.hands
         self.__hands = self.__mp_hands.Hands(max_num_hands=1,
-                                             min_detection_confidence=0.5,
+                                             min_detection_confidence=0.7,
                                              min_tracking_confidence=0.5)
         
         self.__detected = False
@@ -97,7 +97,7 @@ class Detector:
         _, self.__frame = self.__cap.read()
         self.__calc_hand_status()
         self.__calc_finger_status()
-        self.__calc_face_status()
+        # self.__calc_face_status()
         self.__convert_finger_status()
         self.__resize_window()
     # public method
